@@ -4,7 +4,12 @@ use anyhow::{Context, Result};
 use bluez_battery::Devices;
 use dbus::blocking::{stdintf::org_freedesktop_dbus::ObjectManager, Connection};
 use display_error_chain::DisplayErrorChain;
+use regex::{Regex, RegexBuilder};
 use structopt::StructOpt;
+
+fn make_regex(pattern: &str) -> Result<Regex, regex::Error> {
+    RegexBuilder::new(pattern).case_insensitive(true).build()
+}
 
 /// Extracts battery info from BlueZ daemon via D-Bus.
 #[derive(Debug, StructOpt)]
@@ -16,7 +21,8 @@ struct Args {
 
     /// Device name, alias or address to look for. Case insensitive, regular
     /// expressions supported. See https://docs.rs/regex/ for details.
-    filter: Option<String>,
+    #[structopt(parse(try_from_str = make_regex))]
+    filter: Option<Regex>,
 }
 
 fn main() {
@@ -31,7 +37,7 @@ fn main() {
     }
 }
 
-fn run(filter: Option<String>) -> Result<()> {
+fn run(filter: Option<Regex>) -> Result<()> {
     let connection =
         Connection::new_system().context("Unable to initialize a system dbus connection")?;
     log::trace!("Initialized connection {}", connection.unique_name());
@@ -40,14 +46,6 @@ fn run(filter: Option<String>) -> Result<()> {
         .get_managed_objects()
         .context("Unable to get objects")?;
     log::trace!("Fetched objects:\n{:#?}", objects);
-    let filter = filter
-        .map(|filter| {
-            regex::RegexBuilder::new(&filter)
-                .case_insensitive(true)
-                .build()
-                .context("Unable to build a regular expression from filter")
-        })
-        .transpose()?;
     let devices = Devices::new(&objects, filter);
     for (device, charge) in devices {
         log::info!("{}: {}", device, charge);
