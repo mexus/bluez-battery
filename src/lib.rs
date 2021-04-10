@@ -18,6 +18,7 @@ pub use logging::setup_logs;
 /// Device with a charge.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
 #[cfg_attr(feature = "with_serde", derive(serde::Serialize))]
+#[non_exhaustive]
 pub struct DeviceWithCharge<'a> {
     /// Device.
     #[cfg_attr(feature = "with_serde", serde(flatten))]

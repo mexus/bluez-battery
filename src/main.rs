@@ -58,7 +58,7 @@ fn run(args: Args) -> Result<()> {
         println!("{}", serialized);
         return Ok(());
     }
-    for DeviceWithCharge { device, charge } in devices {
+    for DeviceWithCharge { device, charge, .. } in devices {
         log::info!("{}: {}", device, charge);
     }
 

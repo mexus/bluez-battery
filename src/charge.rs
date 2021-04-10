@@ -5,8 +5,7 @@ use dbus::arg::{ArgType, RefArg};
 
 /// Battery charge (in percent).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
-#[cfg_attr(feature = "with_serde", derive(serde::Serialize))]
-#[cfg_attr(feature = "with_serde", serde(transparent))]
+#[cfg_attr(feature = "with_serde", derive(serde::Serialize), serde(transparent))]
 pub struct BatteryCharge {
     value: u8,
 }
