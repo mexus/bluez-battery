@@ -56,8 +56,7 @@ fn run(filter: Option<Regex>, machine: bool) -> Result<()> {
     log::trace!("Fetched objects:\n{:#?}", objects);
     let devices = Devices::new(&objects, filter);
     if machine {
-        let all_data: Vec<_> = devices.collect();
-        let serialized = serde_json::to_string(&all_data).context("Unable to serialize data")?;
+        let serialized = serde_json::to_string(&devices).context("Unable to serialize data")?;
         println!("{}", serialized);
     } else {
         for DeviceWithCharge { device, charge } in devices {

@@ -2,10 +2,12 @@ use std::collections::{hash_map::Iter as HashMapIter, HashMap};
 
 use display_error_chain::DisplayErrorChain;
 use regex::Regex;
+use serde::ser::{Serialize, SerializeSeq, Serializer};
 
 use crate::{charge::BatteryCharge, Device, DeviceWithCharge};
 
 /// An iterator over devices.
+#[derive(Debug, Clone)]
 pub struct Devices<'a> {
     inner: HashMapIter<'a, dbus::Path<'static>, HashMap<String, dbus::arg::PropMap>>,
     filter: Option<Regex>,
@@ -22,6 +24,19 @@ impl<'a> Devices<'a> {
             inner: objects.iter(),
             filter,
         }
+    }
+}
+
+impl<'a> Serialize for Devices<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut sequence = serializer.serialize_seq(None)?;
+        for device in self.clone() {
+            sequence.serialize_element(&device)?;
+        }
+        sequence.end()
     }
 }
 
