@@ -14,6 +14,7 @@ pub struct Device<'a> {
     #[cfg_attr(feature = "with_serde", serde(skip_serializing_if = "Option::is_none"))]
     alias: Option<&'a str>,
     address: &'a str,
+    icon: Option<&'a str>,
 }
 
 impl<'a> Device<'a> {
@@ -22,10 +23,12 @@ impl<'a> Device<'a> {
         let address = get_string_property(properties, "Address")?;
         let name = get_string_property(properties, "Name")?;
         let alias = properties.get("Alias").and_then(RefArg::as_str);
+        let icon = properties.get("Icon").and_then(RefArg::as_str);
         Ok(Device {
             name,
             alias,
             address,
+            icon,
         })
     }
 
@@ -47,6 +50,11 @@ impl<'a> Device<'a> {
                 .map(|alias| identifier.is_match(alias))
                 .unwrap_or(false)
             || identifier.is_match(self.address)
+    }
+
+    /// Associated icon name.
+    pub const fn icon(&self) -> Option<&'a str> {
+        self.icon
     }
 }
 
