@@ -1,7 +1,7 @@
 use std::{process::exit, time::Duration};
 
 use anyhow::{Context, Result};
-use bluez_battery::Devices;
+use bluez_battery::{DeviceWithCharge, Devices};
 use dbus::blocking::{stdintf::org_freedesktop_dbus::ObjectManager, Connection};
 use display_error_chain::DisplayErrorChain;
 use regex::{Regex, RegexBuilder};
@@ -19,6 +19,10 @@ struct Args {
     #[structopt(short, long, parse(from_occurrences))]
     debug: usize,
 
+    /// Produce machine-readable JSON output to stdout.
+    #[structopt(short, long)]
+    machine: bool,
+
     /// Device name, alias or address to look for. Case insensitive, regular
     /// expressions supported. See https://docs.rs/regex/ for details.
     #[structopt(parse(try_from_str = make_regex))]
@@ -26,18 +30,22 @@ struct Args {
 }
 
 fn main() {
-    let Args { debug, filter } = Args::from_args();
+    let Args {
+        debug,
+        filter,
+        machine,
+    } = Args::from_args();
     if let Err(e) = bluez_battery::setup_logs(debug) {
         eprintln!("Unable to setup logger: {}", DisplayErrorChain::new(&e));
         exit(1);
     }
-    if let Err(e) = run(filter) {
+    if let Err(e) = run(filter, machine) {
         log::error!("Terminating with error: {}", DisplayErrorChain::new(&*e));
         exit(1);
     }
 }
 
-fn run(filter: Option<Regex>) -> Result<()> {
+fn run(filter: Option<Regex>, machine: bool) -> Result<()> {
     let connection =
         Connection::new_system().context("Unable to initialize a system dbus connection")?;
     log::trace!("Initialized connection {}", connection.unique_name());
@@ -47,8 +55,14 @@ fn run(filter: Option<Regex>) -> Result<()> {
         .context("Unable to get objects")?;
     log::trace!("Fetched objects:\n{:#?}", objects);
     let devices = Devices::new(&objects, filter);
-    for (device, charge) in devices {
-        log::info!("{}: {}", device, charge);
+    if machine {
+        let all_data: Vec<_> = devices.collect();
+        let serialized = serde_json::to_string(&all_data).context("Unable to serialize data")?;
+        println!("{}", serialized);
+    } else {
+        for DeviceWithCharge { device, charge } in devices {
+            log::info!("{}: {}", device, charge);
+        }
     }
     Ok(())
 }

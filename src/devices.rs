@@ -3,7 +3,7 @@ use std::collections::{hash_map::Iter as HashMapIter, HashMap};
 use display_error_chain::DisplayErrorChain;
 use regex::Regex;
 
-use crate::{charge::BatteryCharge, Device};
+use crate::{charge::BatteryCharge, Device, DeviceWithCharge};
 
 /// An iterator over devices.
 pub struct Devices<'a> {
@@ -26,7 +26,7 @@ impl<'a> Devices<'a> {
 }
 
 impl<'a> Iterator for Devices<'a> {
-    type Item = (Device<'a>, BatteryCharge);
+    type Item = DeviceWithCharge<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
@@ -70,7 +70,7 @@ impl<'a> Iterator for Devices<'a> {
                     continue;
                 }
             };
-            break Some((device, charge));
+            break Some(DeviceWithCharge { device, charge });
         }
     }
 }

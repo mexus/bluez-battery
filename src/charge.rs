@@ -4,7 +4,8 @@ use anyhow::{Context, Result};
 use dbus::arg::{ArgType, RefArg};
 
 /// Battery charge (in percent).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, serde::Serialize)]
+#[serde(transparent)]
 pub struct BatteryCharge {
     value: u8,
 }
@@ -53,5 +54,10 @@ mod test {
         assert_eq!(" 1%", BatteryCharge { value: 1 }.to_string());
         assert_eq!("99%", BatteryCharge { value: 99 }.to_string());
         assert_eq!("100%", BatteryCharge { value: 100 }.to_string());
+    }
+
+    #[test]
+    fn serialize() {
+        serde_test::assert_ser_tokens(&BatteryCharge { value: 50 }, &[serde_test::Token::U8(50)]);
     }
 }
