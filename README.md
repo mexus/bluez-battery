@@ -26,8 +26,8 @@ When built with feature `with_serde` (which is a default), a `-m, --machine`
 flag becomes available. The flag makes the program to output information about
 devices in a JSON format:
 
-```
-[{"name":"WH-1000XM3","alias":"LE_WH-1000XM3","address":"38:18:4C:02:DE:F5","charge":80}]
+```json
+[{"name":"WH-1000XM3","alias":"LE_WH-1000XM3","address":"38:18:4C:02:DE:F5","icon":"audio-card","charge":80}]
 ```
 
 The output comes as an array of objects with the following fields:
