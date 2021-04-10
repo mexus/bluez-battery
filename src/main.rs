@@ -20,6 +20,7 @@ struct Args {
     debug: usize,
 
     /// Produce machine-readable JSON output to stdout.
+    #[cfg(feature = "with_serde")]
     #[structopt(short, long)]
     machine: bool,
 
@@ -30,22 +31,18 @@ struct Args {
 }
 
 fn main() {
-    let Args {
-        debug,
-        filter,
-        machine,
-    } = Args::from_args();
-    if let Err(e) = bluez_battery::setup_logs(debug) {
+    let args = Args::from_args();
+    if let Err(e) = bluez_battery::setup_logs(args.debug) {
         eprintln!("Unable to setup logger: {}", DisplayErrorChain::new(&e));
         exit(1);
     }
-    if let Err(e) = run(filter, machine) {
+    if let Err(e) = run(args) {
         log::error!("Terminating with error: {}", DisplayErrorChain::new(&*e));
         exit(1);
     }
 }
 
-fn run(filter: Option<Regex>, machine: bool) -> Result<()> {
+fn run(args: Args) -> Result<()> {
     let connection =
         Connection::new_system().context("Unable to initialize a system dbus connection")?;
     log::trace!("Initialized connection {}", connection.unique_name());
@@ -54,14 +51,16 @@ fn run(filter: Option<Regex>, machine: bool) -> Result<()> {
         .get_managed_objects()
         .context("Unable to get objects")?;
     log::trace!("Fetched objects:\n{:#?}", objects);
-    let devices = Devices::new(&objects, filter);
-    if machine {
+    let devices = Devices::new(&objects, args.filter);
+    #[cfg(feature = "with_serde")]
+    if args.machine {
         let serialized = serde_json::to_string(&devices).context("Unable to serialize data")?;
         println!("{}", serialized);
-    } else {
-        for DeviceWithCharge { device, charge } in devices {
-            log::info!("{}: {}", device, charge);
-        }
+        return Ok(());
     }
+    for DeviceWithCharge { device, charge } in devices {
+        log::info!("{}: {}", device, charge);
+    }
+
     Ok(())
 }

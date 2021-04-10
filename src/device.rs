@@ -7,10 +7,11 @@ use regex::Regex;
 use crate::get_string_property;
 
 /// A device description.
-#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, serde::Serialize)]
+#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[cfg_attr(feature = "with_serde", derive(serde::Serialize))]
 pub struct Device<'a> {
     name: &'a str,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "with_serde", serde(skip_serializing_if = "Option::is_none"))]
     alias: Option<&'a str>,
     address: &'a str,
 }

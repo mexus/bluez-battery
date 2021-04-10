@@ -2,7 +2,6 @@ use std::collections::{hash_map::Iter as HashMapIter, HashMap};
 
 use display_error_chain::DisplayErrorChain;
 use regex::Regex;
-use serde::ser::{Serialize, SerializeSeq, Serializer};
 
 use crate::{charge::BatteryCharge, Device, DeviceWithCharge};
 
@@ -27,11 +26,13 @@ impl<'a> Devices<'a> {
     }
 }
 
-impl<'a> Serialize for Devices<'a> {
+#[cfg(feature = "serde")]
+impl<'a> serde::Serialize for Devices<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer,
+        S: serde::Serializer,
     {
+        use serde::ser::SerializeSeq;
         let mut sequence = serializer.serialize_seq(None)?;
         for device in self.clone() {
             sequence.serialize_element(&device)?;

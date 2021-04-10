@@ -16,10 +16,11 @@ pub use devices::Devices;
 pub use logging::setup_logs;
 
 /// Device with a charge.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, serde::Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
+#[cfg_attr(feature = "with_serde", derive(serde::Serialize))]
 pub struct DeviceWithCharge<'a> {
     /// Device.
-    #[serde(flatten)]
+    #[cfg_attr(feature = "with_serde", serde(flatten))]
     pub device: Device<'a>,
 
     /// Battery charge.
